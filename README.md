@@ -25,8 +25,112 @@ detect a burst of pipe e ∈ E.
 
 # Questions:
 ### (a) (10 points) In this first question, we want to determine the minimum number of sensors, and where to locate them, so that if any pipe bursts, then at least one sensor will detect it. Formulate this problem as an integer program.
+
+<img width="939" alt="image" src="https://github.com/sakshamarora97/network-monitoring-optimization/assets/62840042/27a77408-e106-488d-b284-8d1134bb0f57">
+
+
 ### (b) (10 points) Code and solve your optimization model. How many sensors are needed to detect any pipe burst?
+
+19.0
+
 ### (c) (10 points) Next, we suppose instead that the network operator possesses b pressure sensors (typically less than the number of sensors found in part (b)). We also assume that each pipe independently bursts with probability 0.1. Formulate an integer program that determines the location of the b sensors that maximizes the expected number of pipe bursts that are detected.
+
+*Given :*
+
+We are given a binary detection matrix $F \in \{{0,1}\}^{|{\mathcal{E}| \times |\mathcal{V}}|}$ that represents the sensing capabilities of the pressure
+sensors. The dimensions of this matrix are 1123 x 811, where every element $f_{e,v} = 1$ if a sensor placed at location $v \in \mathcal{V}$ can detect a burst of pipe $e \in \mathcal{E}$.
+
+*Problem Formulation*
+
+Let $Y_e$ be a discrete random variable which denotes whether pipe $e$ bursts. Thus we have, 
+$$
+\begin{aligned}
+& p_{Y_e}(y)= \begin{cases}0.1 & \text {:$y = 1$ } \\
+0.9 & \text {:$y = 0$}\end{cases} \end{aligned}
+$$
+
+Let $p_e$ be an integer denoting if pipe $e$ is detectable by any sensor. 
+
+$$
+\begin{aligned}
+& p_e= \begin{cases}1 & \text {: pipe e is detected by any sensor } \\
+0 & \text {: otherwise}\end{cases} \end{aligned}
+$$
+
+Let $D_e$ be another discrete random variable which denotes whether pipe burst of $e$ will be detected.
+  
+Thus, we know,
+
+$$
+\begin{aligned}
+& p_{D_e|Y_e=1}(d)= \begin{cases}p_e & \text {:$d = 1$ } \\
+1 - p_e & \text {:$d = 0$}\end{cases} \end{aligned}
+$$
+$$
+\begin{aligned}
+& p_{D_e|Y_e=0}(d)= \begin{cases}0 & \text {:$d = 1$ } \\
+1 & \text {:$d = 0$}\end{cases} \end{aligned}
+$$
+
+From total probability theorem we can write,
+$$
+\begin{aligned}
+& p_{D_e}(d=1) = p_{D_e|Y_e=0}(d=1) p_{Y_e}(y=0) + p_{D_e|Y_e=1}(d=1) p_{Y_e}(y=1)   \\
+& p_{D_e}(d=0) = p_{D_e|Y_e=0}(d=0) p_{Y_e}(y=0) + p_{D_e|Y_e=1}(d=0) p_{Y_e}(y=1)   \\
+\end{aligned}
+$$
+
+Solving, we get,
+$$
+\begin{aligned}
+& p_{D_e}(d)= \begin{cases}0.1p_e & \text {$d=1$ } \\
+1- 0.1p_e & \text {$d=0$}\end{cases} \end{aligned}
+$$
+
+Now computing expectation of random variable $D_e$, we get
+$$
+\begin{aligned}
+& E(D_e) = \sum_{d} \ d*p_{D_e}(d)\
+E(D_e) & = 0.1p_e
+\end{aligned}
+$$
+Now, our problem is to maximize expected number of pipe bursts detected, given b sensors
+The expected number of pipe bursts is given by:
+$$
+\begin{aligned}
+max \quad E(\sum_{e=1}^{1123} \ D_e)\\
+max \quad \sum_{e=1}^{1123} \ E(D_e) & \text{(since $D_e$'s and $Y_e$'s are independent random variables)}\\
+max \quad \sum_{e=1}^{1123} \ 0.1p_e
+\end{aligned}
+$$
+
+**Decision Variable :**
+$$
+\begin{aligned}
+& x_v = \begin{cases}1 & \text {: sensor is placed at node $\ v$ } \forall \ v \in \mathcal{V} \\
+0 & \text {: otherwise}\end{cases} \\
+& p_e = \begin{cases}1 & \text {: pipe $\ e$ is detectable by any sensor } \forall \ e \in \mathcal{E} \\
+0 & \text {: otherwise}\end{cases} \end{aligned}
+$$
+
+**Objective Function :**
+Maximize the expected number of pipe bursts that are detected
+$$
+max \quad \sum_{e=1}^{1123} \ 0.1p_e\\
+$$
+
+**Constraints:**
+
+* Number of Sensors are limited to $b$
+$$
+\quad 
+ \sum_{v=1}^{811} x_v=b \\
+$$
+* If a pipe is detected, then it should be detectable by at least one of the sensors
+$$
+p_e \leqslant \sum_{v=1}^{811} f_{e,v} x_v \quad \forall \ e \in \mathcal{E} \\
+$$
+
 ### (d) (10 points) Code and solve the optimization model formulated in part (c) for b ∈ {0, . . . , 20} using the Gurobi solver. Plot and analyze the optimal value of the problem as a function of the number of sensors b.
 ### (e) (15 points) Instead, the operator wants to investigate a faster solution approach, where sensor locations are sequentially (and myopically) selected. Specifically, the operator takes their first sensor, and places it at the node that detects the maximum expected number of pipe bursts. Then, the operator takes the second sensor, and places it at the node that detects the maximum 2 expected number of pipe bursts that were not previously detected, and so on until all sensors are positioned. Code this iterative algorithm, and plot the resulting expected number of pipe bursts that are detected by that solution, as a function of the number of sensors available, b ∈ {0, . . . , 20}. Compare this plot with the one obtained in part (d).
 ### (f) (15 points) It turns out that some pipes are more critical than others, depending on their locations. For example, a pipe burst next to a hospital will be more problematic than a pipe burst in a remote area. Each pipe e ∈ E is assigned a criticality level we ∈ [0, 1]. The higher we is, the more critical pipe e is. The goal of the network operator is to position their b sensors as to minimize the highest criticality of a pipe that is not detected by any sensor. Formulate
