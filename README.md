@@ -1,6 +1,3 @@
-# network-monitoring-optimization
-Course Project for ISYE 6333 Operations Research 1
-
 # Problem Background
 Ensuring the security of critical infrastructures such as water distribution networks is crucial for
 the welfare and prosperity of our society. Such infrastructure networks may span huge geographical
